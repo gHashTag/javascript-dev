@@ -21,4 +21,3 @@ jobs:
       uses: distributhor/workflow-webhook@v3.0.7
       with:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
-        data: '{ "repository": "Hello world" }'
