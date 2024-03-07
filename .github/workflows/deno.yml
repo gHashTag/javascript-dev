@@ -1,18 +1,23 @@
-
-name: Test Build
+name: Telegram Notification
 
 on:
-  push:
-    branches: 'main'
+  pull_request:
+    types:
+      - opened
+      - synchronize
 
 jobs:
-  check-and-publish:
-    name: "Test job"
+  send-telegram-notification:
     runs-on: ubuntu-latest
+
     steps:
-      - name: "telegram Notification"
-        uses: "appleboy/telegram-action@main"
+      - name: Send Telegram Notification
+        uses: Telegram-Markdown-Bot/telegram-send-message@v2
         with:
-          to: ${{ secrets.TELEGRAM_CHAT_ID }}
-          token: ${{ secrets.TELEGRAM_TOKEN }}
-          args: Test TG Github Actions
+          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
+          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          message: |
+            New commit in PR #${{ github.event.number }}:
+            ${{ github.event.head_commit.message }}
+            Author: ${{ github.event.head_commit.author.name }}
+            SHA: ${{ github.sha }}
