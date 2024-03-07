@@ -1,13 +1,13 @@
 name: Telegram Notification
 
 on:
-  push:
-    branches:
-      - '*'
   pull_request:
     types:
       - opened
       - synchronize
+  push:
+    branches:
+      - 'main'
 
 jobs:
   send-telegram-notification:
@@ -15,12 +15,12 @@ jobs:
 
     steps:
       - name: Send Telegram Notification
-        uses: Telegram-Markdown-Bot/telegram-send-message@v2
+        uses: appleboy/telegram-action@main
         with:
-          bot_token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
-          chat_id: ${{ secrets.TELEGRAM_CHAT_ID }}
+          to: ${{ secrets.TELEGRAM_CHAT_ID }}
+          token: ${{ secrets.TELEGRAM_BOT_TOKEN }}
           message: |
-            New commit in PR #${{ github.event.number }}:
+            Новый коммит в Pull Request #${{ github.event.number }}:
             ${{ github.event.head_commit.message }}
-            Author: ${{ github.event.head_commit.author.name }}
+            Автор: ${{ github.event.head_commit.author.name }}
             SHA: ${{ github.sha }}
