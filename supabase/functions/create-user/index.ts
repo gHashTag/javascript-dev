@@ -1,6 +1,7 @@
 import { client } from "../utils/client.ts";
 
-Deno.serve(async (req) => {
+// Переписываем код на обычную JavaScript функцию
+async function createUser(req: Request) {
   const supabaseClient = client(req);
 
   const {
@@ -32,4 +33,6 @@ Deno.serve(async (req) => {
     JSON.stringify(data),
     { headers: { "Content-Type": "application/json" } },
   );
-});
+}
+
+export { createUser };
