@@ -18,8 +18,17 @@ jobs:
 
     # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
-    # Runs a single command using the runners shell
-    - name: Webhook
+    - name: Webhook for PR
+      if: github.event_name == 'pull_request'
       uses: distributhor/workflow-webhook@v3.0.7
       with:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
+        data: ${{ github.event.pull_request.html_url }}
+        content_type: 'application/x-www-form-urlencoded'
+    - name: Webhook for Push
+      if: github.event_name == 'push'
+      uses: distributhor/workflow-webhook@v3.0.7
+      with:
+        webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
+        data: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+        content_type: 'application/x-www-form-urlencoded'
