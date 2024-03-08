@@ -23,12 +23,12 @@ jobs:
       uses: distributhor/workflow-webhook@v3.0.7
       with:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
-        data: ${{ github.event.pull_request.html_url }}
+        data: '{"url": "${{ github.event.pull_request.html_url }}"}'
         
     - name: Webhook for Push
       if: github.event_name == 'push'
       uses: distributhor/workflow-webhook@v3.0.7
       with:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
-        data: https://github.com/${{ github.repository }}/commit/${{ github.sha }}
+        data: '{"url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}"}'
     
