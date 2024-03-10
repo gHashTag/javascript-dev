@@ -32,7 +32,7 @@ bot.on("callback_query:data", async (ctx) => {
 
   if (callbackData === "javascript_01_01") {
     try {
-      resetProgress(ctx.message?.from?.username);
+      resetProgress(ctx.callbackQuery.from.username || "");
       const questionContext = {
         lesson_number: 1,
         subtopic: 1,
