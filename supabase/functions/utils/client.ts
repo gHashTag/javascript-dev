@@ -1,15 +1,14 @@
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
-export const client = (req: any) => {
-  const SUPABASE_ANON_KEY = Deno.env.get("SUPABASE_ANON_KEY");
-  const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
+export const client = () => {
+  const ANON_KEY_SUPABASE = Deno.env.get("ANON_KEY_SUPABASE");
+  const URL_SUPABASE = Deno.env.get("URL_SUPABASE");
 
-  const authHeader = req.headers.get("Authorization")!;
   const supabaseClient = createClient(
-    SUPABASE_URL ?? "",
-    SUPABASE_ANON_KEY ??
+    URL_SUPABASE ?? "",
+    ANON_KEY_SUPABASE ??
       "",
-    { global: { headers: { Authorization: authHeader } } },
   );
+  console.log("supabaseClient", supabaseClient);
   return supabaseClient;
 };

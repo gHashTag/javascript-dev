@@ -1,7 +1,7 @@
 import { client } from "../utils/client.ts";
 
 Deno.serve(async (req) => {
-  const supabase = client(req);
+  const supabase = client();
   try {
     const { lesson_number } = await req.json();
     const { data, error } = await supabase
