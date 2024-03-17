@@ -1,6 +1,6 @@
 import { client } from "./utils/client.ts";
 
-async function trueCounter({ user_id }: { user_id: string }): Promise<number> {
+async function trueCounter(user_id: string): Promise<number> {
   const supabase = client();
 
   // Запрос к базе данных для получения данных пользователя

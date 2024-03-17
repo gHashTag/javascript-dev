@@ -25,10 +25,7 @@ async function createUser(ctx: any) {
 
   const data = await supabaseClient.from("users").insert([{ ...usersData }]);
 
-  return new Response(
-    JSON.stringify(data),
-    { headers: { "Content-Type": "application/json" } },
-  );
+  return data;
 }
 
 export { createUser };

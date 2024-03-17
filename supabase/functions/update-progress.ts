@@ -3,32 +3,19 @@ import { client } from "./utils/client.ts";
 const supabase = client();
 
 interface updateProgressContext {
-  username: string;
+  user_id: string;
   isTrue: boolean;
   path: string;
 }
 
 async function updateProgress(
-  { username, isTrue, path }: updateProgressContext,
+  { user_id, isTrue, path }: updateProgressContext,
 ): Promise<void> {
-  // Получаем user_id по username из таблицы users
-  const { data: userData, error: userError } = await supabase
-    .from("users")
-    .select("user_id")
-    .eq("username", username)
-    .single();
-
-  if (userError || !userData) {
-    throw new Error(userError?.message || "User not found");
-  }
-
-  const userId = userData.user_id;
-
   // Проверяем, существует ли запись в таблице javascript_progress для данного user_id
   const { data: progressData, error: progressError } = await supabase
     .from("javascript_progress")
     .select("user_id")
-    .eq("user_id", userId);
+    .eq("user_id", user_id);
 
   if (progressError) throw new Error(progressError.message);
 
@@ -36,7 +23,7 @@ async function updateProgress(
     // Если записи нет, создаем новую
     const { error: insertError } = await supabase
       .from("javascript_progress")
-      .insert([{ user_id: userId }]);
+      .insert([{ user_id: user_id }]);
 
     if (insertError) throw new Error(insertError.message);
   } else {
@@ -44,7 +31,7 @@ async function updateProgress(
     const { error: updateError } = await supabase
       .from("javascript_progress")
       .update({ [path]: isTrue })
-      .eq("user_id", userId);
+      .eq("user_id", user_id);
 
     if (updateError) throw new Error(updateError.message);
   }

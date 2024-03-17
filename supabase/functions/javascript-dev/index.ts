@@ -10,6 +10,7 @@ import { getBiggest } from "../get-biggest.ts";
 import { pathIncrement } from "../path-increment.ts";
 import { updateProgress } from "../update-progress.ts";
 import { trueCounter } from "../true-counter.ts";
+import { getUid } from "../get-uid.ts";
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
 
@@ -20,7 +21,7 @@ bot.command("start", (ctx) => {
     {
       reply_markup: {
         inline_keyboard: [
-          [{ text: "Начать тест!", callback_data: "javascript_01_01" }],
+          [{ text: "Начать тест!", callback_data: "start_test" }],
         ],
       },
     },
@@ -35,7 +36,7 @@ bot.command(
 bot.on("callback_query:data", async (ctx) => {
   const callbackData = ctx.callbackQuery.data;
 
-  if (callbackData === "javascript_01_01") {
+  if (callbackData === "start_test") {
     try {
       resetProgress(ctx.callbackQuery.from.username || "");
       const questionContext = {
@@ -62,15 +63,15 @@ bot.on("callback_query:data", async (ctx) => {
         const inlineKeyboard = [
           [{
             text: variant_0 || "Вариант 1",
-            callback_data: `${callbackData}_0`,
+            callback_data: `javascript_01_01_0`,
           }],
           [{
             text: variant_1 || "Вариант 2",
-            callback_data: `${callbackData}_1`,
+            callback_data: `javascript_01_01_1`,
           }],
           [{
-            text: variant_2 || "Вариант 3",
-            callback_data: `${callbackData}_2`,
+            text: variant_2 || "Не знаю",
+            callback_data: `javascript_01_01_2`,
           }],
         ];
 
@@ -88,82 +89,111 @@ bot.on("callback_query:data", async (ctx) => {
       console.error(error);
       await ctx.reply("Произошла ошибка при получении вопроса.");
     }
+  } else if (callbackData.startsWith("javascript_")) {
+    const [language, lesson, subtopic, answer] = callbackData.split("_");
+    let questions;
+    if (!isNaN(Number(lesson)) && !isNaN(Number(subtopic))) {
+      // Значения корректны, вызываем функцию.
+      questions = await getQuestion({
+        lesson_number: Number(lesson),
+        subtopic: Number(subtopic),
+      });
+    } else {
+      // Одно из значений некорректно, обрабатываем ошибку.
+      console.error(
+        "Одно из значений некорректно:",
+        lesson,
+        subtopic,
+        callbackData,
+      );
+      return;
+    }
+    const { correct_option_id } = questions[0];
+    let isTrueAnswer = null;
+    if (correct_option_id === Number(answer)) {
+      isTrueAnswer = true;
+    } else {
+      isTrueAnswer = false;
+    }
+    const biggestSubtopic = await getBiggest(Number(lesson));
+    const ifSubtopic = biggestSubtopic === Number(subtopic) ? false : true;
+    const newPath = pathIncrement({
+      isSubtopic: ifSubtopic,
+      path: callbackData.slice(0, -2),
+    });
+    const [newLanguage, newLesson, newSubtopic] = newPath.split("_");
+    let newQuestions;
+    if (!isNaN(Number(newLesson)) && !isNaN(Number(newSubtopic))) {
+      // Значения корректны, вызываем функцию.
+      newQuestions = await getQuestion({
+        lesson_number: Number(newLesson),
+        subtopic: Number(newSubtopic),
+      });
+    } else {
+      // Одно из значений некорректно, обрабатываем ошибку.
+      console.error(
+        "Одно из значений некорректно:",
+        newLesson,
+        newSubtopic,
+        callbackData,
+      );
+      await ctx.reply("Произошла ошибка при получении нового вопроса.");
+      return;
+    }
+
+    const user_id = await getUid(ctx.callbackQuery.from.username || "");
+    if (!user_id) {
+      await ctx.reply("Пользователь не найден.");
+      return;
+    }
+    await updateProgress({
+      user_id: user_id,
+      isTrue: isTrueAnswer,
+      path: `${language}_${lesson}_${subtopic}`,
+    });
+    const trueCount = await trueCounter(user_id);
+    if (newQuestions.length > 0) {
+      const {
+        topic,
+        question,
+        variant_0,
+        variant_1,
+        variant_2,
+        image_lesson_url,
+        id,
+      } = newQuestions[0];
+
+      // Формируем сообщение
+      const messageText =
+        `${topic}\n\n<i><u>Теперь мы предлагаем вам закрепить полученные знания:</u></i>\n\n<b>Вопрос №${id}</b>\n\n${question}\n\n<b>🎯 Ваш счёт: ${trueCount}XP </b>`;
+
+      // Формируем кнопки
+      const inlineKeyboard = [
+        [{
+          text: variant_0 || "Вариант 1",
+          callback_data: `${newPath}_0`,
+        }],
+        [{
+          text: variant_1 || "Вариант 2",
+          callback_data: `${newPath}_1`,
+        }],
+        [{
+          text: variant_2 || "Не знаю",
+          callback_data: `${newPath}_2`,
+        }],
+      ];
+
+      // Отправляем сообщение
+      await ctx.replyWithPhoto(image_lesson_url, {
+        caption: messageText,
+        parse_mode: "HTML",
+        reply_markup: { inline_keyboard: inlineKeyboard },
+      });
+      return;
+    }
+    ctx.reply(ctx.callbackQuery.data);
+    return;
   }
-
-  // if (callbackData.split("_").length > 3) {
-  //   const [lesson, subtopic, answer] = callbackData.split("_");
-  //   const questions = await getQuestion({
-  //     lesson_number: Number(lesson),
-  //     subtopic: Number(subtopic),
-  //   });
-  //   const { correct_answer } = questions[0];
-  //   let isTrueAnswer = null;
-  //   if (correct_answer === answer) {
-  //     isTrueAnswer = true;
-  //   } else {
-  //     isTrueAnswer = false;
-  //   }
-  //   const biggestSubtopic = await getBiggest(Number(lesson));
-  //   const ifSubtopic = biggestSubtopic === Number(subtopic) ? true : false;
-  //   const newPath = pathIncrement({
-  //     isSubtopic: ifSubtopic,
-  //     path: callbackData.slice(0, -2),
-  //   });
-  //   const [newLesson, newSubtopic] = newPath.split("_");
-  //   const newQuestionContext = {
-  //     lesson_number: Number(newLesson),
-  //     subtopic: Number(newSubtopic),
-  //   };
-  //   const newQuestion = await getQuestion(newQuestionContext);
-  //   updateProgress({
-  //     username: ctx.callbackQuery.from.username || "",
-  //     isTrue: isTrueAnswer,
-  //     path: newPath,
-  //   });
-  //   const trueCount = await trueCounter({
-  //     user_id: ctx.callbackQuery.from.username || "",
-  //   });
-
-  //   const {
-  //     topic,
-  //     question,
-  //     variant_0,
-  //     variant_1,
-  //     variant_2,
-  //     image_lesson_url,
-  //     id,
-  //   } = newQuestion[0];
-
-  //   // Формируем сообщение
-  //   const messageText =
-  //     `${topic}\n\n<i><u>Теперь мы предлагаем вам закрепить полученные знания:</u></i>\n\n<b>Вопрос №${id}</b>\n\n${question}\n\n<b>🎯 Ваш счёт: ${trueCount}XP </b>`;
-
-  //   // Формируем кнопки
-  //   const inlineKeyboard = [
-  //     [{
-  //       text: variant_0 || "Вариант 1",
-  //       callback_data: `${newPath}_0`,
-  //     }],
-  //     [{
-  //       text: variant_1 || "Вариант 2",
-  //       callback_data: `${newPath}_1`,
-  //     }],
-  //     [{
-  //       text: variant_2 || "Вариант 3",
-  //       callback_data: `${newPath}_2`,
-  //     }],
-  //   ];
-
-  //   // Отправляем сообщение
-  //   await ctx.replyWithPhoto(image_lesson_url, {
-  //     caption: messageText,
-  //     parse_mode: "HTML",
-  //     reply_markup: { inline_keyboard: inlineKeyboard },
-  //   });
-  //   return;
-  // }
-  ctx.reply(ctx.callbackQuery.data);
-  return;
 });
 
 const handleUpdate = webhookCallback(bot, "std/http");
@@ -175,8 +205,16 @@ Deno.serve(async (req) => {
       return new Response("not allowed", { status: 405 });
     }
 
-    return await handleUpdate(req);
+    const result = await handleUpdate(req);
+    // Убедитесь, что result является объектом Response.
+    // Если нет, вы можете обернуть результат в Response или обработать иначе.
+    if (!(result instanceof Response)) {
+      console.error("handleUpdate не вернул объект Response", result);
+      return new Response("Internal Server Error", { status: 500 });
+    }
+    return result;
   } catch (err) {
-    console.error(err);
+    console.error("Ошибка при обработке запроса:", err);
+    return new Response("Internal Server Error", { status: 500 });
   }
 });
