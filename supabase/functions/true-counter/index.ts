@@ -1,7 +1,7 @@
 import { client } from "../utils/client.ts";
 
 Deno.serve(async (req: Request) => {
-  const supabase = client(req);
+  const supabase = client();
 
   if (req.method !== "POST") {
     return new Response("Only POST requests are allowed", { status: 405 });

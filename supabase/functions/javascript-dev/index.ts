@@ -163,6 +163,15 @@ bot.on("callback_query:data", async (ctx) => {
         id,
       } = newQuestions[0];
 
+      if (newPath === "javascript_30_01") {
+        await ctx.replyWithPhoto(image_lesson_url, {
+          caption:
+            `Поздравляем! Вы прошли тест по JavaScript. Ваш счёт: ${trueCount}XP`,
+          parse_mode: "HTML",
+        });
+        return;
+      }
+
       // Формируем сообщение
       const messageText =
         `${topic}\n\n<i><u>Теперь мы предлагаем вам закрепить полученные знания:</u></i>\n\n<b>Вопрос №${id}</b>\n\n${question}\n\n<b>🎯 Ваш счёт: ${trueCount}XP </b>`;
@@ -182,7 +191,6 @@ bot.on("callback_query:data", async (ctx) => {
           callback_data: `${newPath}_2`,
         }],
       ];
-
       // Отправляем сообщение
       await ctx.replyWithPhoto(image_lesson_url, {
         caption: messageText,
