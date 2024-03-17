@@ -6,9 +6,9 @@ on:
   # Trigger the workflow on push or pull request,
   # but only for the master branch
   pull_request:
-    branches: [ main ]
+    branches: [ '*' ]
   push:
-    branches: [ main ]
+    branches: [ '*' ]
 
 # A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
