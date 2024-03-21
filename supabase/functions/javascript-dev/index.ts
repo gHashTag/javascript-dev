@@ -11,10 +11,12 @@ import { pathIncrement } from "../path-increment.ts";
 import { updateProgress } from "../update-progress.ts";
 import { trueCounter } from "../true-counter.ts";
 import { getUid } from "../get-uid.ts";
+import { getAiFeedback } from "../get-ai-feedback.ts";
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
 
-bot.command("start", (ctx) => {
+bot.command("start", async (ctx) => {
+  await ctx.replyWithChatAction("typing");
   createUser(ctx);
   ctx.reply(
     `Hi, ${ctx.update.message?.from.first_name}! 🚀 Давай начнем с тестов – выбери один из них, чтобы проверить свои знания и подготовиться к захватывающему путешествию в мир программирования! 🖥️✨ `,
@@ -33,7 +35,22 @@ bot.command(
   (ctx) => ctx.reply(`Pong! ${new Date()} ${Date.now()}`),
 );
 
+bot.on("message:text", async (ctx) => {
+  await ctx.replyWithChatAction("typing");
+  const text = ctx.message.text;
+  try {
+    const feedback = await getAiFeedback(text);
+    await ctx.reply(feedback, { parse_mode: "Markdown" });
+    return;
+  } catch (error) {
+    console.error("Ошибка при получении ответа AI:", error);
+    await ctx.reply("Произошла ошибка при обработке вашего сообщения.");
+    return;
+  }
+});
+
 bot.on("callback_query:data", async (ctx) => {
+  await ctx.replyWithChatAction("typing");
   const callbackData = ctx.callbackQuery.data;
 
   if (callbackData === "start_test") {
