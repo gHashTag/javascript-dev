@@ -12,6 +12,7 @@ import { updateProgress } from "../update-progress.ts";
 import { trueCounter } from "../true-counter.ts";
 import { getUid } from "../get-uid.ts";
 import { getAiFeedback } from "../get-ai-feedback.ts";
+import { pathDecrement } from "../path-decrement.ts";
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
 
@@ -128,6 +129,13 @@ bot.on("callback_query:data", async (ctx) => {
         await ctx.reply("Пользователь не найден.");
         return;
       }
+    } catch (error) {
+      console.error(error);
+      await ctx.reply(
+        `Произошла ошибка при получении вопроса. ${callbackData}`,
+      );
+    }
+  }
 
       const trueCount = await trueCounter(user_id);
       // Формируем сообщение
