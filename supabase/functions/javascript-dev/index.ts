@@ -12,7 +12,6 @@ import { updateProgress } from "../update-progress.ts";
 import { trueCounter } from "../true-counter.ts";
 import { getUid } from "../get-uid.ts";
 import { getAiFeedback } from "../get-ai-feedback.ts";
-import { pathDecrement } from "../path-decrement.ts";
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
 
@@ -37,11 +36,9 @@ bot.on("message:text", async (ctx) => {
   try {
     const feedback = await getAiFeedback(text);
     await ctx.reply(feedback, { parse_mode: "Markdown" });
-    return;
   } catch (error) {
     console.error("Ошибка при получении ответа AI:", error);
     await ctx.reply("Произошла ошибка при обработке вашего сообщения.");
-    return;
   }
 });
 
@@ -129,14 +126,6 @@ bot.on("callback_query:data", async (ctx) => {
         await ctx.reply("Пользователь не найден.");
         return;
       }
-    } catch (error) {
-      console.error(error);
-      await ctx.reply(
-        `Произошла ошибка при получении вопроса. ${callbackData}`,
-      );
-    }
-  }
-
       const trueCount = await trueCounter(user_id);
       // Формируем сообщение
       const messageText =
@@ -163,7 +152,6 @@ bot.on("callback_query:data", async (ctx) => {
         caption: messageText,
         parse_mode: "HTML",
       });
-      return;
     } catch (error) {
       console.error(error);
       await ctx.reply(
@@ -242,7 +230,6 @@ bot.on("callback_query:data", async (ctx) => {
       await ctx.reply("Произошла ошибка при получении вопроса.");
     }
   }
-  return;
 });
 
 const handleUpdate = webhookCallback(bot, "std/http");
@@ -255,8 +242,6 @@ Deno.serve(async (req) => {
     }
 
     const result = await handleUpdate(req);
-    // Убедитесь, что result является объектом Response.
-    // Если нет, вы можете обернуть результат в Response или обработать иначе.
     if (!(result instanceof Response)) {
       console.error("handleUpdate не вернул объект Response", result);
       return new Response("Internal Server Error", { status: 500 });
