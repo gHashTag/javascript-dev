@@ -11,7 +11,6 @@ interface updateProgressContext {
 async function updateProgress(
   { user_id, isTrue, path }: updateProgressContext,
 ): Promise<void> {
-  // Проверяем, существует ли запись в таблице javascript_progress для данного user_id
   const { data: progressData, error: progressError } = await supabase
     .from("javascript_progress")
     .select("user_id")
@@ -20,14 +19,12 @@ async function updateProgress(
   if (progressError) throw new Error(progressError.message);
 
   if (progressData && progressData.length === 0) {
-    // Если записи нет, создаем новую
     const { error: insertError } = await supabase
       .from("javascript_progress")
       .insert([{ user_id: user_id }]);
 
     if (insertError) throw new Error(insertError.message);
   } else {
-    // Если запись существует, очищаем все поля, кроме user_id и created_at
     const { error: updateError } = await supabase
       .from("javascript_progress")
       .update({ [path]: isTrue })
