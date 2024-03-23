@@ -1,23 +1,22 @@
-# This is a basic workflow that is manually triggered
-name: Pull Request javascript-dev
+name: Pull Request and Push Handler
 
-# Controls when the action will run. Workflow runs when manually triggered using the UI or API.
 on:
-  # Trigger the workflow on push or pull request,
-  # but only for the master branch
   pull_request:
     branches: [ '*' ]
   push:
     branches: [ '*' ]
 
-# A workflow run is made up of one or more jobs that can run sequentially or in parallel
 jobs:
-  test_commentary:
-    # The type of runner that the job will run on
+  handle_webhook:
     runs-on: ubuntu-latest
-
-    # Steps represent a sequence of tasks that will be executed as part of the job
     steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Get commit author for Push
+      if: github.event_name == 'push'
+      run: echo "COMMIT_AUTHOR=$(git log -1 --pretty=format:'%an')" >> $GITHUB_ENV
+
     - name: Webhook for PR
       if: github.event_name == 'pull_request'
       uses: distributhor/workflow-webhook@v3.0.7
@@ -25,10 +24,9 @@ jobs:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
         data: '{"url": "${{ github.event.pull_request.html_url }}", "author": "${{ github.event.pull_request.user.login }}"}'
         
-    - name: Webhook for Push
+    - name: Webhook for Push with commit author
       if: github.event_name == 'push'
       uses: distributhor/workflow-webhook@v3.0.7
       with:
         webhook_url: "https://hook.eu2.make.com/c98145z4s5jbpw906x26s15zobhpko07"
-        data: '{"url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}", "author": "${{ github.actor }}"}'
-    
+        data: '{"url": "https://github.com/${{ github.repository }}/commit/${{ github.sha }}", "author": "${{ env.COMMIT_AUTHOR }}"}'
