@@ -188,8 +188,10 @@ bot.on("callback_query:data", async (ctx) => {
         let isTrueAnswer = null;
         if (correct_option_id === Number(answer)) {
           isTrueAnswer = true;
+          ctx.reply("✅");
         } else {
           isTrueAnswer = false;
+          ctx.reply("❌");
         }
         await updateProgress({ user_id, isTrue: isTrueAnswer, path: path });
         const newPath = await pathIncrement({
