@@ -12,6 +12,7 @@ import { updateProgress } from "../update-progress.ts";
 import { trueCounter } from "../true-counter.ts";
 import { getUid } from "../get-uid.ts";
 import { getAiFeedback } from "../get-ai-feedback.ts";
+import { updateResult } from "../update-result.ts";
 
 const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
 
@@ -38,7 +39,6 @@ bot.on("message:text", async (ctx) => {
     await ctx.reply(feedback, { parse_mode: "Markdown" });
   } catch (error) {
     console.error("Ошибка при получении ответа AI:", error);
-    await ctx.reply("Произошла ошибка при обработке вашего сообщения.");
   }
 });
 
@@ -86,7 +86,6 @@ bot.on("callback_query:data", async (ctx) => {
       }
     } catch (error) {
       console.error(error);
-      await ctx.reply("Произошла ошибка при получении вопроса.");
     }
   }
 
@@ -154,9 +153,6 @@ bot.on("callback_query:data", async (ctx) => {
       });
     } catch (error) {
       console.error(error);
-      await ctx.reply(
-        `Произошла ошибка при получении вопроса. ${callbackData}`,
-      );
     }
   }
 
@@ -200,6 +196,30 @@ bot.on("callback_query:data", async (ctx) => {
         });
         const trueCount = await trueCounter(user_id);
 
+        if (newPath === "javascript_30_01") {
+          const correctProcent = trueCount / 230 * 100;
+          if (correctProcent >= 80) {
+            await updateResult({
+              user_id,
+              language: "javascript",
+              value: true,
+            });
+            ctx.reply(
+              `<b>🥳 Поздравляем, вы прошли тест! </b>\n\n🎯 Ваш результат: ${trueCount}XP из 230XP.`,
+              { parse_mode: "HTML" },
+            );
+          } else {
+            await updateResult({
+              user_id,
+              language: "javascript",
+              value: false,
+            });
+            ctx.reply(
+              `<b>🥲 Вы не прошли тест, но это не помешает вам развиваться! </b>\n\n🎯 Ваш результат: ${trueCount}XP из 230XP.`,
+              { parse_mode: "HTML" },
+            );
+          }
+        }
         const [newLanguage, newLesson, newSubtopic] = newPath.split("_");
         const newQuestions = await getQuestion({
           lesson_number: Number(newLesson),
@@ -229,7 +249,6 @@ bot.on("callback_query:data", async (ctx) => {
       }
     } catch (error) {
       console.error(error);
-      await ctx.reply("Произошла ошибка при получении вопроса.");
     }
   }
 });
