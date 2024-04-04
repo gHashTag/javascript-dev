@@ -2,7 +2,6 @@
 // https://deno.land/manual/getting_started/setup_your_environment
 // This enables autocomplete, go to definition, etc.
 
-import { Bot, webhookCallback } from "https://deno.land/x/grammy@v1.8.3/mod.ts";
 import { createUser } from "../create-user.ts";
 import { getQuestion } from "../get-question.ts";
 import { resetProgress } from "../reset-progress.ts";
@@ -13,8 +12,7 @@ import { trueCounter } from "../true-counter.ts";
 import { getUid } from "../get-uid.ts";
 import { getAiFeedback } from "../get-ai-feedback.ts";
 import { updateResult } from "../update-result.ts";
-
-const bot = new Bot(Deno.env.get("BOT_TOKEN") || "");
+import { bot, handleUpdate } from "../utils/bot.ts";
 
 bot.command("start", async (ctx) => {
   await ctx.replyWithChatAction("typing");
@@ -252,8 +250,6 @@ bot.on("callback_query:data", async (ctx) => {
     }
   }
 });
-
-const handleUpdate = webhookCallback(bot, "std/http");
 
 Deno.serve(async (req) => {
   try {
